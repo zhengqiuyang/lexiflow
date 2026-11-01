@@ -203,13 +203,14 @@ export async function handleApi(method, pathname, search, body) {
     const tag = parts[2];
     const dict = getDictDb();
     const offset = Number(search.get("offset") ?? 0), limit = Math.min(100, Number(search.get("limit") ?? 50));
+    // cards 在 app.db、book_word 在 dict.db:禁止跨库 JOIN,在 JS 侧合并
+    const cardWords = new Set(db.prepare("SELECT word FROM cards").all().map(r => r.word));
     const rows = dict.prepare(`
-      SELECT s.word, s.phonetic, s.translation, s.tag, s.frq,
-             CASE WHEN c.word IS NULL THEN 0 ELSE 1 END AS in_cards
+      SELECT s.word, s.phonetic, s.translation, s.tag, s.frq
       FROM book_word b JOIN stardict s ON s.word = b.word
-      LEFT JOIN cards c ON c.word = b.word
       WHERE b.book = ? ORDER BY (s.frq = 0) ASC, s.frq ASC LIMIT ? OFFSET ?`)
-      .all(tag, limit, offset);
+      .all(tag, limit, offset)
+      .map(r => ({ ...r, in_cards: cardWords.has(r.word) ? 1 : 0 }));
     return { words: rows };
   }
 
