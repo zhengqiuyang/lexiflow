@@ -43,4 +43,7 @@ window.addEventListener("lexiflow:stats", refreshStatus);
 // 异步错误不再静默:至少落到控制台,便于发现"点了没反应"类问题
 window.addEventListener("unhandledrejection", e =>
   console.error("[LexiFlow] 未处理的异步错误:", e.reason));
+
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
 route();

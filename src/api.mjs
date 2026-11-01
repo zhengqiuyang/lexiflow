@@ -244,18 +244,26 @@ export async function handleApi(method, pathname, search, body) {
     const count = Math.min(20, Math.max(1, Number(search.get("count")) || 5));
     const pool = dict.prepare(`
       SELECT s.word, s.translation FROM book_word b JOIN stardict s ON s.word = b.word
-      WHERE b.book = ? AND s.translation != '' AND s.frq > 0 ORDER BY RANDOM() LIMIT ?`).all(tag, count * 4);
+      WHERE b.book = ? AND s.translation != '' AND s.frq > 0 ORDER BY RANDOM() LIMIT ?`).all(tag, count * 8);
+    // 选项必须互不相同且不等于答案(首行中文相同会造成歧义题)
     const questions = [];
-    for (let i = 0; i + 3 < pool.length && questions.length < count; i += 4) {
-      const four = pool.slice(i, i + 4);
-      const answer = four[0];
-      const opts = four.map(x => firstZh(x.translation)).sort(() => Math.random() - 0.5);
-      questions.push({
-        word: answer.word,
-        options: opts,
-        answer: firstZh(answer.translation),
-        translation: answer.translation,
-      });
+    const usedAnswers = new Set();
+    for (const answer of pool) {
+      if (questions.length >= count) break;
+      const ansZh = firstZh(answer.translation);
+      if (usedAnswers.has(ansZh) || ansZh === "(无释义)") continue;
+      const distractors = [];
+      for (const cand of pool) {
+        if (cand.word === answer.word) continue;
+        const zh = firstZh(cand.translation);
+        if (zh === "(无释义)" || zh === ansZh || distractors.includes(zh)) continue;
+        distractors.push(zh);
+        if (distractors.length === 3) break;
+      }
+      if (distractors.length < 3) continue;
+      usedAnswers.add(ansZh);
+      const options = [ansZh, ...distractors].sort(() => Math.random() - 0.5);
+      questions.push({ word: answer.word, options, answer: ansZh, translation: answer.translation });
     }
     return { questions };
   }

@@ -19,7 +19,15 @@ export async function render(view) {
     const pct = b.total ? Math.round(b.added / b.total * 100) : 0;
     el.innerHTML = `<div class="bn">${esc(b.name)}</div><div class="bc">${b.total} 词 · 已收 ${b.added}</div>
       <div class="bar"><div style="width:${pct}%"></div></div>`;
-    el.onclick = () => { currentBook = b; renderDetail(view); };
+    el.onclick = async () => {
+      currentBook = b;
+      try {
+        await renderDetail(view);
+      } catch (e) {
+        view.querySelector("#book-detail").innerHTML =
+          `<div class="card" style="border-color:var(--red)"><b>加载失败:</b>${esc(e.message)}</div>`;
+      }
+    };
     grid.appendChild(el);
   }
   if (currentBook) renderDetail(view);
@@ -52,7 +60,10 @@ async function renderDetail(view) {
       <span>${w.in_cards ? `<span class="tagchip">已收</span>` : ""}</span>
     </div>`).join("");
 
-  view.querySelector("#b-learn").onclick = () => learn(view);
+  view.querySelector("#b-learn").onclick = () => learn(view).catch(e => {
+    view.querySelector("#b-content").innerHTML =
+      `<div class="card" style="border-color:var(--red)"><b>加载失败:</b>${esc(e.message)}</div>`;
+  });
   view.querySelector("#b-quiz").onclick = () => quiz(view);
 }
 

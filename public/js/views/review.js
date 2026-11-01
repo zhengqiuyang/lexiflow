@@ -107,10 +107,15 @@ function renderCard(view) {
   area.querySelectorAll("#f-grades button").forEach(b => {
     b.onclick = async () => {
       b.disabled = true;
-      await api("/api/review/grade", { method: "POST", body: { word: current.word, q: Number(b.dataset.q) } });
-      sessionReviewed++;
-      idx++;
-      renderCard(view);
+      try {
+        await api("/api/review/grade", { method: "POST", body: { word: current.word, q: Number(b.dataset.q) } });
+        sessionReviewed++;
+        idx++;
+        renderCard(view);
+      } catch (e) {
+        b.disabled = false;
+        area.querySelector("#f-answer").innerHTML += `<div style="color:var(--red); margin-top:8px">⚠️ 打分失败:${esc(e.message)}(可重试)</div>`;
+      }
     };
   });
 

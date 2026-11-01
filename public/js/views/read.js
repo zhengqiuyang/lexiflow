@@ -289,27 +289,33 @@ async function showPopupFor(norm, el, rawOverride) {
   popup.querySelector("#pp-speak").onclick = () => speak(e2?.word ?? norm);
   const add = popup.querySelector("#pp-add");
   if (add) add.onclick = async () => {
-    const sentence = el ? extractSentence(el) : "";
-    await api("/api/words/add", { method: "POST", body: { word: norm, lemma: e2?.word ?? "", source: currentDocId ? `doc:${currentDocId}` : "reading", context: sentence } });
-    if (el) setStatus(el, norm, "learning");
-    markRecent(norm, "learning");
-    window.dispatchEvent(new Event("lexiflow:stats"));
-    hidePopup();
+    try {
+      const sentence = el ? extractSentence(el) : "";
+      await api("/api/words/add", { method: "POST", body: { word: norm, lemma: e2?.word ?? "", source: currentDocId ? `doc:${currentDocId}` : "reading", context: sentence } });
+      if (el) setStatus(el, norm, "learning");
+      markRecent(norm, "learning");
+      window.dispatchEvent(new Event("lexiflow:stats"));
+      hidePopup();
+    } catch (e3) { showPopupError(e3.message); }
   };
   const known = popup.querySelector("#pp-known");
   if (known) known.onclick = async () => {
-    await api("/api/words/known", { method: "POST", body: { word: norm } });
-    if (el) setStatus(el, norm, "known");
-    markRecent(norm, "known");
-    window.dispatchEvent(new Event("lexiflow:stats"));
-    hidePopup();
+    try {
+      await api("/api/words/known", { method: "POST", body: { word: norm } });
+      if (el) setStatus(el, norm, "known");
+      markRecent(norm, "known");
+      window.dispatchEvent(new Event("lexiflow:stats"));
+      hidePopup();
+    } catch (e3) { showPopupError(e3.message); }
   };
   const forget = popup.querySelector("#pp-forget");
   if (forget) forget.onclick = async () => {
-    await api("/api/words/forget", { method: "POST", body: { word: norm } });
-    if (el) setStatus(el, norm, "new");
-    markRecent(norm, "new");
-    hidePopup();
+    try {
+      await api("/api/words/forget", { method: "POST", body: { word: norm } });
+      if (el) setStatus(el, norm, "new");
+      markRecent(norm, "new");
+      hidePopup();
+    } catch (e3) { showPopupError(e3.message); }
   };
   const ai = popup.querySelector("#pp-ai");
   if (ai) ai.onclick = async () => {
@@ -325,6 +331,12 @@ async function showPopupFor(norm, el, rawOverride) {
     }
     if (el) positionPopup(popup, el);
   };
+}
+
+function showPopupError(msg) {
+  const popup = document.getElementById("popup");
+  const box = popup.querySelector("#pp-ai-box");
+  if (box) box.innerHTML = `<div class="pt" style="color:var(--red)">⚠️ ${esc(msg)}</div>`;
 }
 
 function extractSentence(el) {
@@ -388,4 +400,9 @@ function hint(main, msg) {
 
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function escAttr(s) { return esc(s).replace(/"/g, "&quot;"); }
-function normWord(w) { return w.toLowerCase().replace(/[’‘]/g, "'").replace(/['’-]+$/g, ""); }
+/** 与服务端 normalizeWord 保持一致(否则弹卡与全文高亮的键不一致) */
+function normWord(w) {
+  let x = w.toLowerCase().replace(/[’‘]/g, "'").replace(/['’-]+$/g, "");
+  if (x.length >= 5 && x.endsWith("'s")) x = x.slice(0, -2);
+  return x;
+}
