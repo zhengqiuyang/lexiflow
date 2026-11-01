@@ -19,12 +19,30 @@ export async function render(view) {
     <h1>🃏 复习</h1>
     <div class="hint">SM-2 间隔重复:忘记的今天再见,记得的按遗忘曲线拉远。</div>
     <div class="progress-line">到期 <b>${r.totalDue}</b> · 队列加载 ${queue.length} 张 · 今日已复习 ${r.reviewedToday} 次 ·
-      未来 7 天: ${forecast.buckets.map((b, i) => `D+${i + 1}:${b}`).join(" · ")}</div>
+      未来 7 天: ${forecast.buckets.map((b, i) => `D+${i + 1}:${b}`).join(" · ")} · 快捷键:空格=翻面 1/2/3=打分</div>
     <div id="card-area"></div>`;
 
   window.__steps.push("html-set");
+  installKeys(view);
   renderCard(view);
   window.__steps.push("card-done");
+}
+
+let keyHandler = null;
+function installKeys(view) {
+  if (keyHandler) document.removeEventListener("keydown", keyHandler);
+  keyHandler = e => {
+    if (!document.getElementById("card-area")) { document.removeEventListener("keydown", keyHandler); return; }
+    if (e.key === " " && !revealed) {
+      e.preventDefault();
+      view.querySelector("#f-reveal")?.click();
+    } else if (revealed && ["1", "2", "3"].includes(e.key)) {
+      const q = { "1": 2, "2": 3, "3": 5 }[e.key];
+      const btn = view.querySelector(`#f-grades button[data-q="${q}"]`);
+      if (btn && !btn.disabled) btn.click();
+    }
+  };
+  document.addEventListener("keydown", keyHandler);
 }
 
 function renderCard(view) {

@@ -30,7 +30,10 @@ export async function render(view) {
     <div class="card mt" style="max-width:640px">
       <h1 style="font-size:15px">数据</h1>
       <div class="hint">数据目录:${esc(s.dataDir)}</div>
-      <div class="row mt"><button id="s-export">导出全部数据(JSON)</button></div>
+      <div class="row mt">
+        <button id="s-export">导出全部数据(JSON)</button>
+        <button id="s-export-csv">导出生词本(CSV / Anki 可导入)</button>
+      </div>
     </div>`;
 
   const collect = () => ({
@@ -56,6 +59,18 @@ export async function render(view) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `lexiflow-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  };
+  view.querySelector("#s-export-csv").onclick = async () => {
+    const { cards, known } = await api("/api/words/all");
+    const rows = [["word", "context", "source", "ease", "intervalDays", "reps", "lapses", "due", "added"],
+      ...cards.map(c => [c.word, `"${String(c.context).replace(/"/g, '""')}"`, c.source, c.ease, c.interval, c.reps, c.lapses,
+        new Date(c.due_ms).toISOString().slice(0, 10), new Date(c.added_ms).toISOString().slice(0, 10)])];
+    const csv = "\uFEFF" + rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `lexiflow-cards-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
   };
 }

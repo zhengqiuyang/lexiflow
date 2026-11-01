@@ -38,4 +38,5 @@ async function refreshStatus() {
 }
 
 window.addEventListener("hashchange", route);
+window.addEventListener("lexiflow:stats", refreshStatus);
 route();

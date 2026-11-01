@@ -49,7 +49,12 @@ export function getAppDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       role TEXT NOT NULL, content TEXT NOT NULL,
       scenario TEXT NOT NULL DEFAULT 'daily', ms INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS ai_examples(
+      word TEXT PRIMARY KEY, sentence TEXT NOT NULL, zh TEXT NOT NULL, ms INTEGER NOT NULL);
   `);
+  // 一次性数据清洗:ECDICT 释义里的字面 \n 污染了早期卡片的语境句
+  appDb.prepare("UPDATE cards SET context = REPLACE(context, ?, '; ') WHERE context LIKE ?")
+    .run("\\n", "%\\n%");
   return appDb;
 }
 

@@ -15,10 +15,26 @@ function json(res2, obj) { return obj; }
 function entryRow(r) {
   return {
     word: r.word, phonetic: r.phonetic ?? "",
-    definition: r.definition ?? "", translation: r.translation ?? "",
+    definition: r.definition ?? "", translation: cleanZh(r.translation),
     pos: r.pos ?? "", collins: r.collins ?? 0, oxford: r.oxford ?? 0,
-    tag: r.tag ?? "", bnc: r.bnc ?? 0, frq: r.frq ?? 0, exchange: r.exchange ?? "",
+    tag: r.tag ?? "", bnc: r.bnc ?? 0, frq: r.frq ?? 0,
+    forms: parseForms(r.exchange ?? ""),
   };
+}
+
+const FORM_LABELS = { "0": "原型", p: "过去式", d: "过去分词", i: "现在分词", "3": "三单", s: "复数", r: "比较级", t: "最高级" };
+
+/** exchange "0:run/1:i/i:running/s:runnings" → [{label:"过去式", value:"ran"}…] */
+function parseForms(exchange) {
+  const out = [];
+  for (const part of String(exchange).split("/")) {
+    const idx = part.indexOf(":");
+    if (idx < 1) continue;
+    const code = part.slice(0, idx), value = part.slice(idx + 1);
+    const label = FORM_LABELS[code];
+    if (label && code !== "0" && value) out.push({ label, value });
+  }
+  return out.slice(0, 6);
 }
 
 function getEntry(word) {
@@ -67,6 +83,7 @@ export async function handleApi(method, pathname, search, body) {
       query: norm, via: entry ? via : "miss",
       entry: entry ? entryRow(entry) : null,
       status: wordStatus(norm),
+      aiConfigured: Boolean(getSetting("aiKey") && getSetting("aiBase")),
     };
   }
 
@@ -94,6 +111,36 @@ export async function handleApi(method, pathname, search, body) {
     const word = normalizeWord(body.word);
     db.prepare("DELETE FROM known_words WHERE word = ?").run(word);
     return { ok: true, word };
+  }
+
+  if (method === "GET" && pathname === "/api/words/all") {
+    const cards = db.prepare("SELECT word, context, source, ease, interval, reps, lapses, due_ms, added_ms FROM cards ORDER BY added_ms DESC").all();
+    const known = db.prepare("SELECT word, ms FROM known_words ORDER BY ms DESC").all();
+    return { cards, known };
+  }
+
+  // ---- AI 例句(核心闭环的 AI 接入点) ----
+  if (method === "POST" && pathname === "/api/ai/example") {
+    const norm = normalizeWord(body.word);
+    if (!norm) return { error: "word required" };
+    const cached = db.prepare("SELECT sentence, zh FROM ai_examples WHERE word = ?").get(norm);
+    if (cached) return { sentence: cached.sentence, zh: cached.zh, cached: true };
+    const entry = getEntry(norm);
+    const meaning = entry ? firstZh(entry.translation) : "";
+    const r = await aiFetch([
+      { role: "user", content:
+        `Generate ONE example sentence for the English word "${norm}"` +
+        (meaning ? ` (meaning: ${meaning})` : "") +
+        `. Rules: max 14 words, B1 vocabulary, use a different form if more natural. ` +
+        `Reply in exactly two lines:\nEnglish sentence\n中文翻译` },
+    ]);
+    const lines = String(r.content ?? "").split("\n").map(s => s.replace(/^\d+[.)]\s*/, "").trim()).filter(Boolean);
+    const sentence = lines.find(l => /[a-zA-Z]/.test(l)) ?? "";
+    const zh = lines.find(l => !/^[a-zA-Z][a-zA-Z .']*$/.test(l) && /[\u4e00-\u9fa5]/.test(l)) ?? "";
+    if (!sentence) return { error: "AI 未返回可用例句" };
+    db.prepare("INSERT OR REPLACE INTO ai_examples(word, sentence, zh, ms) VALUES(?,?,?,?)")
+      .run(norm, sentence, zh, Date.now());
+    return { sentence, zh, cached: false };
   }
 
   // ---- review ----

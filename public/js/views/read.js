@@ -120,14 +120,20 @@ async function showPopup(el) {
   const tags = e2 ? (e2.collins > 0 ? `<span class="tagchip">★${e2.collins}</span>` : "") +
     (e2.oxford ? `<span class="tagchip">Oxford</span>` : "") +
     (e2.frq ? `<span class="tagchip">频率 #${e2.frq}</span>` : "") : "";
+  const forms = e2?.forms?.length
+    ? `<div class="pt">${e2.forms.map(f => `<span class="tagchip">${f.label} ${esc(f.value)}</span>`).join("")}</div>` : "";
+  const aiBtn = r.aiConfigured ? `<button id="pp-ai">✨ AI 例句</button>` : "";
   popup.innerHTML = `
     <div class="pw">${esc(raw)}${e2?.phonetic ? `<span class="pp">${esc(e2.phonetic)}</span>` : ""}</div>
     <div class="pt">${r.via === "lemma" ? `原型:${esc(e2.word)} · ` : ""}${r.via === "miss" ? "词典未收录" : ""}${statusLine}${tags}</div>
+    ${forms}
     ${e2 ? `<div class="pd">${esc(e2.translation || e2.definition)}</div>` : `<div class="pd">词典中没有这个词。</div>`}
+    <div id="pp-ai-box"></div>
     <div class="pbtns">
       <button id="pp-speak">🔊</button>
+      ${aiBtn}
       ${r.status !== "learning" ? `<button id="pp-add" class="primary">+ 生词本</button>` : ""}
-      ${r.status !== "known" ? `<button id="pp-known">已认识</button>` : ""}
+      ${r.status === "known" ? `<button id="pp-forget">不再认识</button>` : `<button id="pp-known">已认识</button>`}
     </div>`;
   positionPopup(popup, el);
 
@@ -137,13 +143,37 @@ async function showPopup(el) {
     const sentence = extractSentence(el);
     await api("/api/words/add", { method: "POST", body: { word: norm, lemma: e2?.word ?? "", source: currentDocId ? `doc:${currentDocId}` : "reading", context: sentence } });
     setStatus(el, norm, "learning");
+    window.dispatchEvent(new Event("lexiflow:stats"));
     hidePopup();
   };
   const known = popup.querySelector("#pp-known");
   if (known) known.onclick = async () => {
     await api("/api/words/known", { method: "POST", body: { word: norm } });
     setStatus(el, norm, "known");
+    window.dispatchEvent(new Event("lexiflow:stats"));
     hidePopup();
+  };
+  const forget = popup.querySelector("#pp-forget");
+  if (forget) forget.onclick = async () => {
+    await api("/api/words/forget", { method: "POST", body: { word: norm } });
+    setStatus(el, norm, "new");
+    window.dispatchEvent(new Event("lexiflow:stats"));
+    hidePopup();
+  };
+  const ai = popup.querySelector("#pp-ai");
+  if (ai) ai.onclick = async () => {
+    const box = popup.querySelector("#pp-ai-box");
+    box.innerHTML = `<div class="pt">✨ 生成中…</div>`;
+    ai.disabled = true;
+    try {
+      const r2 = await api("/api/ai/example", { method: "POST", body: { word: e2?.word ?? norm } });
+      box.innerHTML = `<div class="pd" style="border-left:2px solid var(--accent); padding-left:10px; margin-top:8px;">
+        ${esc(r2.sentence)}${r2.zh ? `<br><span style="color:var(--dim)">${esc(r2.zh)}</span>` : ""}
+        ${r2.cached ? `<span class="tagchip">缓存</span>` : ""}</div>`;
+    } catch (e3) {
+      box.innerHTML = `<div class="pt">⚠️ ${esc(e3.message)}</div>`;
+      ai.disabled = false;
+    }
   };
 }
 
