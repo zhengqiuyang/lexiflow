@@ -1,10 +1,11 @@
 /** 设置视图:AI 配置 + 学习偏好 + 数据导出 */
 import { api } from "../api.js";
+import { icon } from "../icons.js";
 
 export async function render(view) {
   const s = await api("/api/settings");
   view.innerHTML = `
-    <h1>⚙️ 设置</h1>
+    <h1>${icon("settings", 20)} 设置</h1>
     <div class="hint">所有配置保存在本机 data/app.db,不上传。</div>
     <div class="card" style="max-width:640px">
       <h1 style="font-size:15px">AI 接口(OpenAI 兼容,可选)</h1>

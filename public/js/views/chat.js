@@ -1,5 +1,6 @@
 /** AI 对话视图:场景化口语/写作陪练(BYO key) */
 import { api, speak } from "../api.js";
+import { icon } from "../icons.js";
 
 let scenario = "daily";
 
@@ -12,7 +13,7 @@ export async function render(view) {
   const history = status.aiConfigured ? await api(`/api/ai/history?scenario=${scenario}`) : { messages: [] };
 
   view.innerHTML = `
-    <h1>💬 AI 对话</h1>
+    <h1>${icon("chat", 20)} AI 对话</h1>
     <div class="hint">自带 API key(OpenAI 兼容:GLM / DeepSeek / OpenAI / Ollama 均可),对话成本 ≈ 纯 API 费。语音识别需 Edge/Chrome。</div>
     ${status.aiConfigured ? "" : `<div class="card" style="border-color:var(--amber)">⚠️ 尚未配置 AI:请到 <a href="#/settings" style="color:var(--accent)">设置</a> 填写 Base URL、API Key 与模型名。其余模块不受影响。</div>`}
     <div class="chips" id="scen-chips">

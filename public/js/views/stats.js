@@ -1,5 +1,6 @@
 /** 统计视图:热力图 + 总量 + 词汇量 */
 import { api } from "../api.js";
+import { icon } from "../icons.js";
 
 export async function render(view) {
   const s = await api("/api/stats");
@@ -23,7 +24,7 @@ export async function render(view) {
   }
 
   view.innerHTML = `
-    <h1>📊 统计</h1>
+    <h1>${icon("stats", 20)} 统计</h1>
     <div class="hint">数据全部在本机 data/ 目录,可随时打包带走。</div>
     <div class="stat-row">
       <div class="stat-card"><div class="n" style="color:var(--green)">${s.vocabEstimate}</div><div class="t">词汇量(生词本+已认识)</div></div>

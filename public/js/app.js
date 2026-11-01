@@ -1,5 +1,6 @@
 /** LexiFlow SPA 入口:hash 路由 + 侧栏状态 */
 import { api } from "./api.js";
+import { render as todayView } from "./views/today.js";
 import { render as readView } from "./views/read.js";
 import { render as reviewView } from "./views/review.js";
 import { render as booksView } from "./views/books.js";
@@ -8,13 +9,13 @@ import { render as statsView } from "./views/stats.js";
 import { render as settingsView } from "./views/settings.js";
 
 const routes = {
-  read: readView, review: reviewView, books: booksView,
+  today: todayView, read: readView, review: reviewView, books: booksView,
   chat: chatView, stats: statsView, settings: settingsView,
 };
 
 async function route() {
-  const name = (location.hash.replace(/^#\//, "") || "read").split("?")[0];
-  const view = routes[name] ?? routes.read;
+  const name = (location.hash.replace(/^#\//, "") || "today").split("?")[0];
+  const view = routes[name] ?? routes.today;
   document.querySelectorAll(".nav-item").forEach(a => a.classList.toggle("active", a.dataset.view === name));
   const main = document.getElementById("view");
   main.innerHTML = `<div class="empty">加载中…</div>`;

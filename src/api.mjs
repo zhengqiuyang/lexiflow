@@ -79,11 +79,17 @@ export async function handleApi(method, pathname, search, body) {
       }
     }
     bumpActivity("lookups");
+    // 词书归属
+    const dict2 = getDictDb();
+    const inBooks = dict2
+      ? dict2.prepare("SELECT book FROM book_word WHERE word = ?").all(norm).map(r => r.book)
+      : [];
     return {
       query: norm, via: entry ? via : "miss",
       entry: entry ? entryRow(entry) : null,
       status: wordStatus(norm),
       aiConfigured: Boolean(getSetting("aiKey") && getSetting("aiBase")),
+      books: inBooks,
     };
   }
 
@@ -329,6 +335,32 @@ export async function handleApi(method, pathname, search, body) {
     const scenario = search.get("scenario") ?? "daily";
     const rows = db.prepare("SELECT role, content, ms FROM chat_messages WHERE scenario = ? ORDER BY id DESC LIMIT 50").all(scenario);
     return { messages: rows.reverse() };
+  }
+
+  // ---- today(仪表盘) ----
+  if (method === "GET" && pathname === "/api/today") {
+    const day = new Date().toLocaleDateString("sv-SE");
+    const act = db.prepare("SELECT * FROM activity WHERE day = ?").get(day) ?? {};
+    const known = db.prepare("SELECT COUNT(*) c FROM known_words").get().c;
+    const cards = db.prepare("SELECT COUNT(*) c FROM cards").get().c;
+    const due = db.prepare("SELECT COUNT(*) c FROM cards WHERE due_ms <= ?").get(Date.now()).c;
+    const recentDocs = db.prepare("SELECT id, title FROM docs ORDER BY created_ms DESC LIMIT 4").all();
+    let streak = 0;
+    const activeDays = new Set(db.prepare("SELECT day FROM activity WHERE lookups+adds+reviews+new_words+ai_turns > 0").all().map(r => r.day));
+    const cursor = new Date();
+    if (!activeDays.has(day)) cursor.setDate(cursor.getDate() - 1);
+    for (;;) {
+      const k = cursor.toLocaleDateString("sv-SE");
+      if (!activeDays.has(k)) break;
+      streak++; cursor.setDate(cursor.getDate() - 1);
+    }
+    return {
+      due,
+      reviewedToday: act.reviews ?? 0,
+      newToday: act.new_words ?? 0,
+      newGoal: Number(getSetting("dailyNew")) || 10,
+      streak, vocab: known + cards, recentDocs,
+    };
   }
 
   // ---- stats ----

@@ -1,25 +1,44 @@
-/* LexiFlow 词流 · 深色主题 */
+/* LexiFlow 词流 · 深色主题 v0.3 设计系统 */
 :root {
   --bg: #16161e; --card: #20202b; --card-line: #30303e;
   --text: #ebeef0; --dim: #9698a5;
-  --accent: #00b0c8; --green: #48c78e; --amber: #f0b43c; --red: #eb5a5a;
+  --accent: #00b0c8; --accent2: #0e7ea8; --green: #48c78e; --amber: #f0b43c; --red: #eb5a5a;
   --bg2: #26262f;
+  --radius: 12px; --radius-s: 8px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, .35);
+  --side-w: 176px;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif; font-size: 14px; }
 #shell { display: flex; height: 100vh; }
-#sidebar { width: 200px; background: #1a1a24; border-right: 1px solid var(--card-line); padding: 18px 12px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.logo { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+#sidebar { width: var(--side-w); background: #1a1a24; border-right: 1px solid var(--card-line); padding: 18px 12px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.logo { font-size: 17px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
 .logo .sub { color: var(--accent); font-weight: 400; font-size: 13px; }
-.nav-item { color: var(--dim); text-decoration: none; padding: 10px 12px; border-radius: 8px; transition: all .15s; }
+.nav-item { color: var(--dim); text-decoration: none; padding: 9px 12px; border-radius: var(--radius-s); transition: all .15s; display: flex; align-items: center; }
 .nav-item:hover { background: var(--bg2); color: var(--text); }
-.nav-item.active { background: var(--accent); color: #06272b; font-weight: 600; }
+.nav-item.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #06272b; font-weight: 600; box-shadow: 0 2px 12px rgba(0, 176, 200, .3); }
 .status { margin-top: auto; color: var(--dim); font-size: 12px; padding: 8px; line-height: 1.7; }
 #view { flex: 1; overflow-y: auto; padding: 28px 36px; }
-h1 { font-size: 20px; margin: 0 0 6px; }
+h1 { font-size: 20px; margin: 0 0 6px; display: flex; align-items: center; gap: 8px; }
+h1 svg { color: var(--accent); }
 .hint { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
-.card { background: var(--card); border: 1px solid var(--card-line); border-radius: 12px; padding: 18px 20px; }
-button, .btn { background: #2a2a38; color: var(--text); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-size: 14px; font-family: inherit; transition: background .15s; white-space: nowrap; }
+.card { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); padding: 18px 20px; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.card:hover { border-color: #3d3d50; }
+button, .btn { background: #2a2a38; color: var(--text); border: 0; border-radius: var(--radius-s); padding: 9px 16px; cursor: pointer; font-size: 14px; font-family: inherit; transition: background .15s, transform .06s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+button:hover { background: #38384a; }
+button:active { transform: scale(.97); }
+button.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #eafcff; font-weight: 600; }
+button.primary:hover { filter: brightness(1.12); }
+button.good { background: var(--green); color: #0a2417; font-weight: 600; }
+button.warn { background: var(--amber); color: #33260a; font-weight: 600; }
+button.bad { background: var(--red); color: #fff; font-weight: 600; }
+button:disabled { opacity: .45; cursor: default; }
+button svg { flex-shrink: 0; }
+kbd { background: var(--bg2); border: 1px solid var(--card-line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; font-size: 11px; color: var(--dim); font-family: inherit; }
+input, textarea, select { background: var(--bg2); color: var(--text); border: 1px solid var(--card-line); border-radius: var(--radius-s); padding: 10px 12px; font-size: 14px; font-family: inherit; }
+input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { width: 100%; resize: vertical; line-height: 1.7; }
+label { color: var(--dim); font-size: 13px; display: block; margin: 12px 0 6px; }
 button:hover { background: #38384a; }
 button.primary { background: var(--accent); color: #06272b; font-weight: 600; }
 button.primary:hover { background: #17c4dd; }
@@ -31,8 +50,17 @@ input, textarea, select { background: var(--bg2); color: var(--text); border: 1p
 textarea { width: 100%; resize: vertical; }
 label { color: var(--dim); font-size: 13px; display: block; margin: 12px 0 6px; }
 
-/* 阅读视图 */
-#reading-pane { background: var(--card); border: 1px solid var(--card-line); border-radius: 12px; padding: 24px 28px; line-height: 2.1; font-size: 16px; font-family: Georgia, "Times New Roman", serif; }
+/* 阅读视图 v0.3 */
+.side-col { display: flex; flex-direction: column; max-height: calc(100vh - 140px); }
+#side-body { overflow-y: auto; flex: 1; }
+.reader-toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; margin-bottom: 14px; }
+.reader-toolbar button { padding: 6px 11px; font-size: 13px; }
+.reader-toolbar button.on { color: var(--accent); }
+#reading-pane { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); padding: 26px 32px; line-height: 2.1; font-family: Georgia, "Times New Roman", serif; }
+#reading-pane.dim-off .w-known { color: var(--text); }
+.doc-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--card-line); border-radius: 20px; padding: 7px 15px; margin: 4px 8px 4px 0; cursor: pointer; font-size: 13px; transition: border-color .15s; }
+.doc-chip:hover { border-color: var(--accent); color: var(--accent); }
+.mini-add { padding: 4px 8px; font-size: 12px; }
 .w { cursor: pointer; border-radius: 4px; padding: 1px 2px; transition: background .1s; }
 .w:hover { background: var(--bg2); }
 .w-known { color: #565865; }
@@ -90,8 +118,31 @@ label { color: var(--dim); font-size: 13px; display: block; margin: 12px 0 6px; 
 .hm-cell { width: 14px; height: 14px; border-radius: 3px; background: var(--bg2); }
 .hm-1 { background: #0e4429; } .hm-2 { background: #006d32; } .hm-3 { background: #26a641; } .hm-4 { background: #48c78e; }
 
-.grid2 { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
-.doc-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+/* 今日仪表盘 */
+.today-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.today-grid .card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.today-grid .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.hero-icon { margin-bottom: 6px; }
+.hero-num { font-size: 34px; font-weight: 800; line-height: 1.1; letter-spacing: -.5px; }
+.hero-num .dim-num { color: var(--dim); font-size: 18px; font-weight: 500; }
+.hero-t { color: var(--text); font-size: 13px; margin: 2px 0 4px; }
+.hero-s { color: var(--dim); font-size: 12px; margin-bottom: 10px; }
+.today-grid .card button { margin-top: auto; }
+#t-review { grid-column: span 2; background: linear-gradient(160deg, #1d2a33, var(--card) 65%); }
+#t-review.done { background: linear-gradient(160deg, #1b2f26, var(--card) 65%); }
+#t-review .hero-num { font-size: 44px; }
+#t-review button { align-self: flex-start; }
+
+/* 复习总结卡 */
+.summary .sum-icon { color: var(--green); margin-bottom: 8px; }
+.summary .sum-row { color: var(--dim); margin: 8px 0; font-size: 14px; }
+.summary .sum-row b { color: var(--text); font-size: 18px; }
+
+.tagchip.book { color: var(--accent); border: 1px solid var(--accent); background: rgba(0, 176, 200, .08); }
+.pd.ai-ex { border-left: 2px solid var(--accent); padding-left: 10px; margin-top: 8px; }
+
+.grid2 { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+.doc-item { padding: 10px 12px; border-radius: var(--radius-s); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
 .doc-item:hover, .doc-item.active { background: var(--bg2); }
 .doc-item .del { color: var(--dim); cursor: pointer; padding: 2px 6px; }
 .doc-item .del:hover { color: var(--red); }

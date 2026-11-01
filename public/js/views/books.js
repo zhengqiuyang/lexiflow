@@ -1,12 +1,13 @@
 /** 词书视图:8 本词书 + 学新词 + 测验 */
 import { api, speak } from "../api.js";
+import { icon } from "../icons.js";
 
 let currentBook = null;
 
 export async function render(view) {
   const { books } = await api("/api/books");
   view.innerHTML = `
-    <h1>📚 词书</h1>
+    <h1>${icon("books", 20)} 词书</h1>
     <div class="hint">选择词书,按词频由常用到生僻推进;新词自动进入复习队列。闯关是索引,阅读是主体。</div>
     <div id="book-grid" class="book-grid"></div>
     <div id="book-detail" class="mt"></div>`;
@@ -26,16 +27,20 @@ export async function render(view) {
 
 async function renderDetail(view) {
   const b = currentBook;
-  const words = await api(`/api/books/${b.tag}/words?offset=0&limit=50`);
+  const [words, forecast] = await Promise.all([
+    api(`/api/books/${b.tag}/words?offset=0&limit=50`),
+    api("/api/review/forecast"),
+  ]);
   view.querySelector("#book-detail").innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <h1 style="margin:0">${esc(b.name)} <span style="color:var(--dim);font-size:13px">${b.total} 词 · 已收 ${b.added}</span></h1>
         <div class="row">
-          <button id="b-learn" class="primary">今日学新词</button>
+          <button id="b-learn" class="primary">${icon("zap", 14)} 今日学新词</button>
           <button id="b-quiz">测验 5 题</button>
         </div>
       </div>
+      <div class="hint" style="margin:10px 0 0">本书已收的词在全局复习队列里${forecast.buckets[0] > 0 ? ` · 今天有 ${forecast.buckets[0]} 张到期,` : ""}<a href="#/review" style="color:var(--accent)">去复习</a></div>
       <div id="b-content" class="mt"></div>
     </div>`;
 
