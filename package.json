@@ -1,0 +1,15 @@
+{
+  "name": "lexiflow",
+  "version": "0.1.0",
+  "description": "LexiFlow 词流 —— 本地优先的全能英语学习应用:沉浸阅读 + 生词本 + SRS + 词书 + AI 口语(BYO key)",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "node src/setup-dict.mjs",
+    "start": "node server.mjs",
+    "test": "node --test test/csv.test.mjs test/lemma.test.mjs test/tokenize.test.mjs test/sm2.test.mjs"
+  }
+}
