@@ -6,6 +6,7 @@
 
 数据 100% 本地 SQLite，零账号、零上传、无额度墙。
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/zhengqiuyang/lexiflow?style=flat-square&color=0969da)](https://github.com/zhengqiuyang/lexiflow/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/zhengqiuyang/lexiflow?style=flat-square&label=updated)](https://github.com/zhengqiuyang/lexiflow/commits)
 ![local-first](https://img.shields.io/badge/local--first-100%25-22C55E?style=flat-square)
