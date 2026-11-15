@@ -1,8 +1,30 @@
+<div align="center">
+
 # 📖 LexiFlow 词流
 
-**本地优先的全能英语学习应用**:沉浸阅读点词查义 → 一键收词 → SM-2 间隔重复 → 词书闯关 → AI 口语陪练(BYO API key)。数据 100% 本地 SQLite,零账号、零上传、无额度墙。
+**本地优先的全能英语学习应用** — 沉浸阅读点词查义 → 一键收词 → SM-2 间隔复习 → 词书闯关 → AI 口语陪练（BYO API key）。
 
-> 竞品分析结论:没有任何产品同时做好「阅读流查词 / SRS 复习 / 词书体系 / AI 对话」,更没有一个本地的——见 [docs/竞品分析.md](docs/竞品分析.md)。
+数据 100% 本地 SQLite，零账号、零上传、无额度墙。
+
+[![Stars](https://img.shields.io/github/stars/zhengqiuyang/lexiflow?style=flat-square&color=0969da)](https://github.com/zhengqiuyang/lexiflow/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/zhengqiuyang/lexiflow?style=flat-square&label=updated)](https://github.com/zhengqiuyang/lexiflow/commits)
+![local-first](https://img.shields.io/badge/local--first-100%25-22C55E?style=flat-square)
+![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?style=flat-square)
+
+```bash
+npm run setup   # 下载 ECDICT 词典并导入
+npm start       # → http://127.0.0.1:3210
+```
+
+[核心闭环](#loop) · [功能](#features) · [快速开始](#quickstart) · [架构](#arch)
+
+</div>
+
+---
+
+> 竞品分析结论：没有任何产品同时做好「阅读流查词 / SRS 复习 / 词书体系 / AI 对话」，更没有一个本地的——见 [docs/竞品分析.md](docs/竞品分析.md)。
+
+<a id="loop"></a>
 
 ## 核心闭环
 
@@ -11,6 +33,8 @@
    ↑                                              ↓
    └────────── 阅读中高亮生词 ←—— SM-2 复习队列 ←——┘
 ```
+
+<a id="features"></a>
 
 ## 功能
 
@@ -23,6 +47,8 @@
 | 📊 统计 | 12 周热力图、词汇量估算、连击(轻激励,不做焦虑设计) |
 
 **隐私与数据自主权**:无账号、无遥测;数据在 `data/`(app.db + dict.db),设置页一键导出 JSON;AI 对话用你自己的 key,成本 ≈ 纯 API 费($1-5/月),App 不转售 token。
+
+<a id="quickstart"></a>
 
 ## 快速开始
 
@@ -40,6 +66,8 @@ npm test        # 单元测试(21 项:CSV 状态机 / lemma / 分词 / SM-2)
 - GLM:`https://open.bigmodel.cn/api/paas/v4` + `glm-4-flash`
 - DeepSeek:`https://api.deepseek.com` + `deepseek-chat`
 - 完全离线:Ollama `http://localhost:11434/v1`
+
+<a id="arch"></a>
 
 ## 架构
 
